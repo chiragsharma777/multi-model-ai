@@ -1,0 +1,382 @@
+# =========================================================
+# Your AI - Full Stack Project
+# React/Vite + FastAPI + Supabase + OpenRouter
+# =========================================================
+
+
+# =========================================================
+# ENVIRONMENT VARIABLES / SECRETS
+# =========================================================
+
+.env
+.env.local
+.env.development
+.env.development.local
+.env.test
+.env.test.local
+.env.production
+.env.production.local
+
+# Allow example environment files
+!.env.example
+
+# Any environment files inside frontend/backend
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+
+# =========================================================
+# NODE / REACT / VITE
+# =========================================================
+
+node_modules/
+frontend/node_modules/
+**/node_modules/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+bun-debug.log*
+
+.npm/
+.yarn/
+.pnpm-store/
+
+# Vite build files
+dist/
+dist-ssr/
+frontend/dist/
+**/dist/
+
+# Vite cache
+.vite/
+**/.vite/
+
+# TypeScript build info
+*.tsbuildinfo
+
+
+# =========================================================
+# VERCEL
+# =========================================================
+
+.vercel/
+
+
+# =========================================================
+# PYTHON / FASTAPI
+# =========================================================
+
+__pycache__/
+**/__pycache__/
+
+*.py[cod]
+*$py.class
+
+# Python virtual environments
+.venv/
+venv/
+env/
+ENV/
+backend/.venv/
+backend/venv/
+
+# Python packaging
+build/
+dist/
+*.egg-info/
+*.egg
+pip-wheel-metadata/
+
+# Poetry
+.poetry/
+
+# PDM
+.pdm.toml
+.pdm-python
+
+# Hatch
+.hatch/
+
+# Python test/cache
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# MyPy
+.mypy_cache/
+
+# Ruff
+.ruff_cache/
+
+# Pyright
+.pyright/
+
+# IPython
+.ipynb_checkpoints/
+
+
+# =========================================================
+# FASTAPI / LOCAL SERVER FILES
+# =========================================================
+
+*.pid
+*.sock
+
+# Local uploaded files
+uploads/
+uploaded_files/
+
+# Temporary API files
+tmp/
+temp/
+*.tmp
+*.temp
+
+
+# =========================================================
+# DATABASE / LOCAL DATA
+# =========================================================
+
+*.db
+*.sqlite
+*.sqlite3
+
+# Local Supabase
+.supabase/
+
+# Supabase local data
+supabase/.branches/
+supabase/.temp/
+supabase/.cache/
+
+
+# =========================================================
+# GENERATED FILES
+# =========================================================
+
+exports/
+coverage/
+reports/
+generated/
+generated_files/
+
+*.csv
+*.xlsx
+*.zip
+
+# Uncomment these if you want CSV/XLSX files tracked
+# !important-data.csv
+
+
+# =========================================================
+# LOGS
+# =========================================================
+
+logs/
+*.log
+
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+backend.log
+frontend.log
+
+
+# =========================================================
+# IDE / EDITORS
+# =========================================================
+
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+.idea/
+*.iml
+
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Sublime
+*.sublime-workspace
+*.sublime-project
+
+
+# =========================================================
+# OPERATING SYSTEM
+# =========================================================
+
+.DS_Store
+.DS_Store?
+._*
+
+Thumbs.db
+Thumbs.db:encryptable
+
+Desktop.ini
+
+$RECYCLE.BIN/
+
+
+# =========================================================
+# WINDOWS
+# =========================================================
+
+*.stackdump
+*.lnk
+
+
+# =========================================================
+# MACOS
+# =========================================================
+
+.AppleDouble
+.LSOverride
+
+Icon
+
+
+# =========================================================
+# LINUX
+# =========================================================
+
+.directory
+
+
+# =========================================================
+# TEMPORARY / BACKUP FILES
+# =========================================================
+
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+*.orig
+*~
+
+# Editor swap files
+*.swp
+*.swo
+
+
+# =========================================================
+# SECURITY / PRIVATE KEYS
+# =========================================================
+
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+
+# SSH keys
+id_rsa
+id_rsa.pub
+id_dsa
+id_dsa.pub
+id_ecdsa
+id_ecdsa.pub
+id_ed25519
+id_ed25519.pub
+
+# Service account credentials
+service-account*.json
+credentials*.json
+google-credentials*.json
+
+
+# =========================================================
+# AI / API SECRETS
+# =========================================================
+
+openrouter*.json
+secrets/
+secret/
+private/
+private_keys/
+
+
+# =========================================================
+# FILE UPLOADS
+# =========================================================
+
+uploads/
+uploaded_files/
+user_uploads/
+storage/
+
+
+# =========================================================
+# CACHE
+# =========================================================
+
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+*.cache
+
+
+# =========================================================
+# TESTING
+# =========================================================
+
+playwright-report/
+test-results/
+.nyc_output/
+
+
+# =========================================================
+# DOCUMENTATION GENERATED FILES
+# =========================================================
+
+*.pdf
+*.docx
+
+# Uncomment if you want project documentation PDFs tracked
+# !docs/*.pdf
+
+
+# =========================================================
+# BACKUP PROJECT FILES
+# =========================================================
+
+*.zip
+*.tar
+*.tar.gz
+*.rar
+
+backup/
+backups/
+
+
+# =========================================================
+# LOCAL CONFIG
+# =========================================================
+
+.local/
+.local-cache/
+
+
+# =========================================================
+# DO NOT IGNORE SOURCE CODE
+# =========================================================
+# React source, FastAPI source, SQL migrations,
+# package.json, requirements.txt, etc. remain tracked.
