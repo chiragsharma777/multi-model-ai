@@ -13,6 +13,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [recoveryMode, setRecoveryMode] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -42,9 +43,10 @@ export function AuthProvider({ children }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
-      (_event, currentSession) => {
+      (event, currentSession) => {
         setSession(currentSession);
         setUser(currentSession?.user || null);
+        setRecoveryMode(event === "PASSWORD_RECOVERY");
         setLoading(false);
       }
     );
@@ -100,6 +102,10 @@ export function AuthProvider({ children }) {
     });
   }
 
+  function exitRecoveryMode() {
+    setRecoveryMode(false);
+  }
+
   // =========================
   // SIGN OUT
   // =========================
@@ -114,12 +120,14 @@ export function AuthProvider({ children }) {
         user,
         session,
         loading,
+        recoveryMode,
 
         signUp,
         signIn,
 
         resetPassword,
         updatePassword,
+        exitRecoveryMode,
 
         signOut,
       }}

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
@@ -17,19 +18,28 @@ export default function Signup({ onLogin }) {
     setMessage("");
     setLoading(true);
 
-    const { data, error } = await signUp(email, password);
-
-    if (error) {
-      setError(error.message);
-    } else if (data.session) {
-      setMessage("Account created successfully.");
-    } else {
-      setMessage(
-        "Account created. Please check your email to confirm your account."
+    try {
+      const { data, error } = await signUp(
+        email.trim(),
+        password
       );
-    }
 
-    setLoading(false);
+      if (error) {
+        setError(error.message);
+      } else if (data?.session) {
+        setMessage("Account created successfully.");
+      } else {
+        setMessage(
+          "Account created. Please check your email to confirm your account."
+        );
+      }
+    } catch (err) {
+      setError(
+        err?.message || "Something went wrong. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -45,14 +55,19 @@ export default function Signup({ onLogin }) {
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           <div>
-            <label className="text-sm text-slate-300">
+            <label
+              htmlFor="signup-email"
+              className="text-sm text-slate-300"
+            >
               Email
             </label>
 
             <input
+              id="signup-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
               required
               className="mt-2 w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 text-white outline-none focus:border-blue-500"
               placeholder="you@example.com"
@@ -60,29 +75,40 @@ export default function Signup({ onLogin }) {
           </div>
 
           <div>
-            <label className="text-sm text-slate-300">
+            <label
+              htmlFor="signup-password"
+              className="text-sm text-slate-300"
+            >
               Password
             </label>
 
             <input
+              id="signup-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="new-password"
               minLength={6}
               required
               className="mt-2 w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 text-white outline-none focus:border-blue-500"
-              placeholder="••••••••"
+              placeholder="At least 6 characters"
             />
           </div>
 
           {error && (
-            <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-400">
+            <div
+              role="alert"
+              className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-400"
+            >
               {error}
             </div>
           )}
 
           {message && (
-            <div className="rounded-lg bg-green-500/10 border border-green-500/20 p-3 text-sm text-green-400">
+            <div
+              role="status"
+              className="rounded-lg bg-green-500/10 border border-green-500/20 p-3 text-sm text-green-400"
+            >
               {message}
             </div>
           )}
@@ -99,6 +125,7 @@ export default function Signup({ onLogin }) {
         <p className="text-center text-slate-400 mt-6">
           Already have an account?{" "}
           <button
+            type="button"
             onClick={onLogin}
             className="text-blue-400 hover:text-blue-300"
           >

@@ -17,32 +17,30 @@ load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_SECRET_KEY = os.getenv("SUPABASE_SECRET_KEY")
 
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+
+SARVAM_API_KEY = os.getenv("SARVAM_API_KEY")
 
 MODEL_NAME = os.getenv(
     "MODEL_NAME",
-    "inclusionai/ling-3.0-flash-fin:free"
+    "sarvam-105b"
 )
-
 
 # =========================================================
 # CHECK ENVIRONMENT
 # =========================================================
 
-if not SUPABASE_URL:
-    raise RuntimeError(
-        "SUPABASE_URL is missing from backend .env"
-    )
-
-if not SUPABASE_SECRET_KEY:
-    raise RuntimeError(
-        "SUPABASE_SECRET_KEY is missing from backend .env"
-    )
-
-if not OPENROUTER_API_KEY:
-    raise RuntimeError(
-        "OPENROUTER_API_KEY is missing from backend .env"
-    )
+def require_configuration():
+    """Return a useful API error instead of failing while the module imports."""
+    missing = [name for name, value in {
+        "SUPABASE_URL": SUPABASE_URL,
+        "SUPABASE_SECRET_KEY": SUPABASE_SECRET_KEY,
+        "SARVAM_API_KEY": SARVAM_API_KEY,
+    }.items() if not value]
+    if missing:
+        raise HTTPException(
+            status_code=503,
+            detail=f"Backend configuration is missing: {', '.join(missing)}.",
+        )
 
 
 # =========================================================
@@ -50,7 +48,7 @@ if not OPENROUTER_API_KEY:
 # =========================================================
 
 app = FastAPI(
-    title="EnigmaAI Backend",
+    title="AI Backend",
     version="1.0.0"
 )
 
@@ -84,6 +82,10 @@ class ChatRequest(BaseModel):
     conversation_id: str | None = None
 
 
+class ConversationRequest(BaseModel):
+    title: str = "New Chat"
+
+
 # =========================================================
 # SUPABASE AUTHENTICATION
 # =========================================================
@@ -91,6 +93,7 @@ class ChatRequest(BaseModel):
 def get_user_from_token(
     authorization: str | None
 ):
+    require_configuration()
     if not authorization:
         raise HTTPException(
             status_code=401,
@@ -193,6 +196,7 @@ def get_user_from_token(
 # =========================================================
 
 def database_headers():
+    require_configuration()
     return {
         "apikey": SUPABASE_SECRET_KEY,
         "Authorization": (
@@ -258,6 +262,30 @@ def create_conversation(
         )
 
     return data[0]["id"]
+
+
+def get_conversation_messages(conversation_id: str, user_id: str):
+    verify_conversation(conversation_id, user_id)
+    try:
+        response = requests.get(
+            f"{SUPABASE_URL}/rest/v1/messages",
+            headers=database_headers(),
+            params={
+                "conversation_id": f"eq.{conversation_id}",
+                "user_id": f"eq.{user_id}",
+                "select": "id,role,content,model,created_at",
+                "order": "created_at.asc",
+            },
+            timeout=15,
+        )
+    except requests.RequestException:
+        raise HTTPException(status_code=503, detail="Could not load messages.")
+    if response.status_code != 200:
+        raise HTTPException(status_code=500, detail="Could not load messages.")
+    try:
+        return response.json()
+    except ValueError:
+        raise HTTPException(status_code=500, detail="Invalid database response.")
 
 
 # =========================================================
@@ -393,7 +421,8 @@ def root():
 @app.get("/health")
 def health():
     return {
-        "status": "healthy"
+        "status": "healthy",
+        "configured": all([SUPABASE_URL, SUPABASE_SECRET_KEY, SARVAM_API_KEY]),
     }
 
 
@@ -415,6 +444,68 @@ def auth_me(
         "authenticated": True,
         "user": user,
     }
+
+
+@app.get("/conversations")
+def list_conversations(authorization: str | None = Header(default=None)):
+    user = get_user_from_token(authorization)
+    try:
+        response = requests.get(
+            f"{SUPABASE_URL}/rest/v1/conversations",
+            headers=database_headers(),
+            params={"user_id": f"eq.{user['id']}", "select": "id,title,created_at,updated_at", "order": "updated_at.desc,created_at.desc"},
+            timeout=15,
+        )
+    except requests.RequestException:
+        raise HTTPException(status_code=503, detail="Could not load conversations.")
+    if response.status_code != 200:
+        raise HTTPException(status_code=500, detail="Could not load conversations.")
+    return response.json()
+
+
+@app.post("/conversations")
+def new_conversation(request: ConversationRequest, authorization: str | None = Header(default=None)):
+    user = get_user_from_token(authorization)
+    title = request.title.strip() or "New Chat"
+    conversation_id = create_conversation(user["id"], title)
+    return {"id": conversation_id, "title": title[:100]}
+
+
+@app.get("/conversations/{conversation_id}/messages")
+def list_messages(conversation_id: str, authorization: str | None = Header(default=None)):
+    user = get_user_from_token(authorization)
+    return get_conversation_messages(conversation_id, user["id"])
+
+
+@app.patch("/conversations/{conversation_id}")
+def update_conversation(conversation_id: str, request: ConversationRequest, authorization: str | None = Header(default=None)):
+    user = get_user_from_token(authorization)
+    verify_conversation(conversation_id, user["id"])
+    title = request.title.strip()
+    if not title:
+        raise HTTPException(status_code=400, detail="Conversation title cannot be empty.")
+    response = requests.patch(
+        f"{SUPABASE_URL}/rest/v1/conversations",
+        headers={**database_headers(), "Prefer": "return=representation"},
+        params={"id": f"eq.{conversation_id}", "user_id": f"eq.{user['id']}"},
+        json={"title": title[:100]}, timeout=15,
+    )
+    if response.status_code not in [200, 204]:
+        raise HTTPException(status_code=500, detail="Could not rename conversation.")
+    return response.json()[0] if response.content else {"id": conversation_id, "title": title[:100]}
+
+
+@app.delete("/conversations/{conversation_id}")
+def remove_conversation(conversation_id: str, authorization: str | None = Header(default=None)):
+    user = get_user_from_token(authorization)
+    verify_conversation(conversation_id, user["id"])
+    response = requests.delete(
+        f"{SUPABASE_URL}/rest/v1/conversations", headers=database_headers(),
+        params={"id": f"eq.{conversation_id}", "user_id": f"eq.{user['id']}"}, timeout=15,
+    )
+    if response.status_code not in [200, 204]:
+        raise HTTPException(status_code=500, detail="Could not delete conversation.")
+    return {"deleted": True}
 
 
 # =========================================================
@@ -457,6 +548,7 @@ def chat(
     # -----------------------------------------------------
 
     conversation_id = request.conversation_id
+    history = []
 
     if conversation_id:
 
@@ -464,6 +556,10 @@ def chat(
             conversation_id,
             user_id
         )
+        history = get_conversation_messages(
+            conversation_id,
+            user_id
+        )[-20:]
 
     else:
 
@@ -485,22 +581,16 @@ def chat(
     )
 
     # -----------------------------------------------------
-    # 5. Call OpenRouter
+    # 5. Call Sarvam's OpenAI-compatible chat completion API
     # -----------------------------------------------------
 
     try:
         response = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions",
+            "https://api.sarvam.ai/v1/chat/completions",
 
             headers={
-                "Authorization": (
-                    f"Bearer {OPENROUTER_API_KEY}"
-                ),
+                "api-subscription-key": SARVAM_API_KEY,
                 "Content-Type": "application/json",
-                "HTTP-Referer": (
-                    "http://localhost:5174"
-                ),
-                "X-Title": "EnigmaAI",
             },
 
             json={
@@ -516,6 +606,15 @@ def chat(
                             "and useful answers."
                         ),
                     },
+                    *[
+                        {
+                            "role": item["role"],
+                            "content": item["content"],
+                        }
+                        for item in history
+                        if item.get("role") in {"user", "assistant"}
+                        and item.get("content")
+                    ],
                     {
                         "role": "user",
                         "content": message,
@@ -531,7 +630,7 @@ def chat(
     except requests.RequestException:
         raise HTTPException(
             status_code=503,
-            detail="Could not connect to OpenRouter."
+            detail="Could not connect to the AI provider."
         )
 
     # -----------------------------------------------------
@@ -561,7 +660,7 @@ def chat(
             status_code=502,
             detail=(
                 error_message
-                or "OpenRouter request failed."
+                or "AI provider request failed."
             )
         )
 
@@ -575,7 +674,7 @@ def chat(
     except ValueError:
         raise HTTPException(
             status_code=502,
-            detail="Invalid response from OpenRouter."
+            detail="Invalid response from the AI provider."
         )
 
     choices = data.get(
@@ -586,7 +685,7 @@ def chat(
     if not choices:
         raise HTTPException(
             status_code=502,
-            detail="OpenRouter returned no answer."
+            detail="The AI provider returned no answer."
         )
 
     answer = (

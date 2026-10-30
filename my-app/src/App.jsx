@@ -8,7 +8,6 @@ import {
   sendMessage as sendChatMessage,
   getConversations,
   getMessages,
-  createConversation,
   renameConversation,
   deleteConversation,
 } from "./services/api";
@@ -464,7 +463,7 @@ function AuthRequired() {
 // ======================================================
 
 function ResetPasswordPage() {
-  const { updatePassword } = useAuth();
+  const { updatePassword, exitRecoveryMode } = useAuth();
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] =
@@ -607,7 +606,7 @@ function ResetPasswordPage() {
             <button
               type="button"
               onClick={() => {
-                window.location.href = "/";
+                exitRecoveryMode();
               }}
             >
               Back to sign in
@@ -670,7 +669,7 @@ function HomePage() {
 
   const [selectedModel, setSelectedModel] =
     useState(
-      "inclusionai/ling-3.0-flash-fin:free"
+      "sarvam-105b"
     );
 
   const [temperature, setTemperature] =
@@ -678,18 +677,8 @@ function HomePage() {
 
   const models = [
     {
-      id: "inclusionai/ling-3.0-flash-fin:free",
-      name: "Ling 3 Flash",
-    },
-
-    {
-      id: "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
-      name: "Nemotron 3 Nano Omni",
-    },
-
-    {
-      id: "poolside/laguna-s-2.1:free",
-      name: "Laguna S 2.1",
+      id: "sarvam-105b",
+      name: "Sarvam 105B",
     },
   ];
 
@@ -994,37 +983,6 @@ ${fileContent}`;
       ]);
     } finally {
       setSending(false);
-    }
-  }
-
-  // ====================================================
-  // CREATE CONVERSATION
-  // ====================================================
-
-  async function handleCreateConversation() {
-    try {
-      const conversation =
-        await createConversation(
-          "New Chat"
-        );
-
-      setConversations((previous) => [
-        conversation,
-        ...previous,
-      ]);
-
-      setActiveConversationId(
-        conversation.id
-      );
-
-      setMessages([]);
-      setSelectedFile(null);
-      setFileContent("");
-    } catch (error) {
-      console.error(
-        "Failed to create conversation:",
-        error
-      );
     }
   }
 
@@ -1974,7 +1932,7 @@ export default function App() {
   // PASSWORD RECOVERY
   // ====================================================
 
-  if (recoveryMode) {
+  if (recoveryMode && user) {
     return <ResetPasswordPage />;
   }
 

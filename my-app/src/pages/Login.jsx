@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useAuth } from "../context/AuthContext";
 
@@ -15,13 +16,19 @@ export default function Login({ onSignup }) {
     setError("");
     setLoading(true);
 
-    const { error } = await signIn(email, password);
+    try {
+      const { error } = await signIn(email.trim(), password);
 
-    if (error) {
-      setError(error.message);
+      if (error) {
+        setError(error.message);
+      }
+    } catch (err) {
+      setError(
+        err?.message || "Unable to sign in. Please try again."
+      );
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   return (
@@ -37,14 +44,19 @@ export default function Login({ onSignup }) {
 
         <form onSubmit={handleSubmit} className="mt-8 space-y-5">
           <div>
-            <label className="text-sm text-slate-300">
+            <label
+              htmlFor="login-email"
+              className="text-sm text-slate-300"
+            >
               Email
             </label>
 
             <input
+              id="login-email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
               required
               className="mt-2 w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 text-white outline-none focus:border-blue-500"
               placeholder="you@example.com"
@@ -52,22 +64,30 @@ export default function Login({ onSignup }) {
           </div>
 
           <div>
-            <label className="text-sm text-slate-300">
+            <label
+              htmlFor="login-password"
+              className="text-sm text-slate-300"
+            >
               Password
             </label>
 
             <input
+              id="login-password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              autoComplete="current-password"
               required
               className="mt-2 w-full rounded-lg bg-slate-800 border border-slate-700 px-4 py-3 text-white outline-none focus:border-blue-500"
-              placeholder="••••••••"
+              placeholder="Enter your password"
             />
           </div>
 
           {error && (
-            <div className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-400">
+            <div
+              role="alert"
+              className="rounded-lg bg-red-500/10 border border-red-500/20 p-3 text-sm text-red-400"
+            >
               {error}
             </div>
           )}
@@ -84,6 +104,7 @@ export default function Login({ onSignup }) {
         <p className="text-center text-slate-400 mt-6">
           Don't have an account?{" "}
           <button
+            type="button"
             onClick={onSignup}
             className="text-blue-400 hover:text-blue-300"
           >

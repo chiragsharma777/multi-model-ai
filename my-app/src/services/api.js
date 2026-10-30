@@ -127,7 +127,7 @@ export async function getCurrentUser() {
 export async function sendMessage(
   message,
   conversationId = null,
-  model = "inclusionai/ling-3.0-flash-fin:free",
+  model = "sarvam-105b",
   temperature = 0.7
 ) {
   if (
