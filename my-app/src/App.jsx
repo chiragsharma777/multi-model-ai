@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -639,6 +639,8 @@ function HomePage() {
 
   const [messages, setMessages] = useState([]);
 
+  const chatAreaRef = useRef(null);
+
   const [input, setInput] = useState("");
 
   const [sending, setSending] = useState(false);
@@ -712,6 +714,17 @@ function HomePage() {
   useEffect(() => {
     loadConversations();
   }, []);
+
+  useEffect(() => {
+    const chatArea = chatAreaRef.current;
+
+    if (chatArea && messages.length > 0) {
+      chatArea.scrollTo({
+        top: chatArea.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, [messages, sending]);
 
   async function loadConversations() {
     try {
@@ -1258,7 +1271,11 @@ ${text}`;
       <aside className="sidebar">
 
         <div className="brand">
-          <span>AI</span>
+          <span className="brand-mark">AI</span>
+          <div className="brand-copy">
+            <strong>Enigma</strong>
+            <small>Intelligence studio</small>
+          </div>
         </div>
 
         <button
@@ -1457,116 +1474,7 @@ ${text}`;
 
         <header className="header">
 
-          <div className="header-title">
-
-            <h2>
-              Your AI
-            </h2>
-
-            <span className="online-status">
-              <span className="online-dot"></span>
-              Online
-            </span>
-
-          </div>
-
-          {/* =================================================
-              AI SETTINGS
-              ================================================= */}
-
-          <div className="chat-settings">
-
-            {/* MODEL */}
-
-            <label className="model-setting">
-
-              <span>
-                Model
-              </span>
-
-              <select
-                value={
-                  selectedModel
-                }
-                onChange={(event) =>
-                  setSelectedModel(
-                    event.target.value
-                  )
-                }
-              >
-                {models.map(
-                  (model) => (
-                    <option
-                      key={model.id}
-                      value={model.id}
-                    >
-                      {model.name}
-                    </option>
-                  )
-                )}
-              </select>
-
-            </label>
-
-            {/* TEMPERATURE */}
-
-            <label className="temperature-setting">
-
-              <span>
-                Temperature:{" "}
-                {Number(
-                  temperature
-                ).toFixed(1)}
-              </span>
-
-              <input
-                type="range"
-                min="0"
-                max="1.5"
-                step="0.1"
-                value={
-                  temperature
-                }
-                onChange={(event) =>
-                  setTemperature(
-                    Number(
-                      event.target.value
-                    )
-                  )
-                }
-              />
-
-            </label>
-
-          </div>
-
-          {/* =================================================
-              HEADER ACTIONS
-              ================================================= */}
-
           <div className="header-actions">
-
-            <button
-              type="button"
-              className="export-button txt"
-              onClick={() =>
-                exportChat("txt")
-              }
-              title="Export chat as TXT"
-            >
-              ↓ TXT
-            </button>
-
-            <button
-              type="button"
-              className="export-button json"
-              onClick={() =>
-                exportChat("json")
-              }
-              title="Export chat as JSON"
-            >
-              ↓ JSON
-            </button>
 
             <button
               type="button"
@@ -1586,13 +1494,18 @@ ${text}`;
             CHAT AREA
             ================================================== */}
 
-        <section className="chat-area">
+        <section className="chat-area" ref={chatAreaRef}>
 
           {messages.length === 0 ? (
             <div className="welcome">
 
+              <div className="welcome-kicker">
+                <span className="kicker-dot"></span>
+                Your private AI workspace
+              </div>
+
               <h1>
-                How can I help you today?
+                What would you like to create?
               </h1>
 
               <p>
@@ -1605,12 +1518,14 @@ ${text}`;
 
                 <button
                   type="button"
+                  className="suggestion-card learn"
                   onClick={() =>
                     handleQuickAction(
                       "Explain React.js to me"
                     )
                   }
                 >
+                  <span className="suggestion-icon">✦</span>
                   <strong>
                     Explain something
                   </strong>
@@ -1622,12 +1537,14 @@ ${text}`;
 
                 <button
                   type="button"
+                  className="suggestion-card write"
                   onClick={() =>
                     handleQuickAction(
                       "Help me write a professional email"
                     )
                   }
                 >
+                  <span className="suggestion-icon">↗</span>
                   <strong>
                     Help me write
                   </strong>
@@ -1639,12 +1556,14 @@ ${text}`;
 
                 <button
                   type="button"
+                  className="suggestion-card code"
                   onClick={() =>
                     handleQuickAction(
                       "Help me debug my code"
                     )
                   }
                 >
+                  <span className="suggestion-icon">⌘</span>
                   <strong>
                     Debug code
                   </strong>
